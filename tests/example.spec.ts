@@ -2,47 +2,50 @@ import { test } from "@playwright/test";
 import { Buffer } from "buffer";
 import { io as ioClient } from "socket.io-client";
 
+const STREAM_SERVER_URL = process.env.STREAM_SERVER_URL || "http://localhost:3000";
 
+test("Live TypeScript Telecast", async ({ page, request }) => {
+  await request.get(`${STREAM_SERVER_URL}/api/socket`);
 
-// test.beforeEach(async ({ page }) => {
-//   // Start the screencast stream
-//   await page.screencast.start({
-//     onFrame: ({ data }: { data: Buffer }) => {
-//       // Send the JPEG buffer to the server, which relays to viewers
-//       socket.emit("frame", data.toString("base64"));
-//     },
-//     size: { width: 1280, height: 720 },
-//     quality: 70,
-//   });
-//   await new Promise<void>((resolve) => socket.on("connect", () => resolve()));
-// });
-
-// test.afterEach(async ({ page }) => {
-//   await page.screencast.stop();
-//   socket.disconnect();
-// });
-
-test("Live TypeScript Telecast", async ({ page }) => {
-  var socket = ioClient("http://localhost:3000");
-  // Start the screencast stream
-  await page.screencast.start({
-    onFrame: ({ data }: { data: Buffer }) => {
-      // Send the JPEG buffer to the server, which relays to viewers
-      socket.emit("frame", data.toString("base64"));
-    },
-    size: { width: 1280, height: 720 },
-    quality: 70,
+  const socket = ioClient(STREAM_SERVER_URL, {
+    path: "/api/socket_io",
+    transports: ["websocket", "polling"],
+    reconnection: true,
   });
-  await new Promise<void>((resolve) => socket.on("connect", () => resolve()));
 
+  // Wait for connection BEFORE doing anything
+  await new Promise<void>((resolve, reject) => {
+    socket.on("connect", () => {
+      console.log("✅ Socket connected");
+      resolve();
+    });
 
-  // Execute browser actions
-  await page.goto("https://practice.automationnest.com/landing1");
-  await page.locator("//a[text()='HTML 5 Form/Validation']").click();
-  await page.locator("#firstname").fill("Udhaya Kumar");
-  await page.locator("#lastname").fill("Kothandaraman");
-  await page.locator("#phone").fill("9884145883");
-  await page.locator("#city").fill("Chennai")
-  
-  
+    socket.on("connect_error", (err) => {
+      console.error("❌ Socket error:", err.message);
+      reject(err);
+    });
+  });
+
+  try {
+    // Start screencast AFTER connection
+    await page.screencast.start({
+      onFrame: ({ data }: { data: Buffer }) => {
+        if (socket.connected) {
+          socket.emit("frame", data.toString("base64"));
+        }
+      },
+      size: { width: 1280, height: 720 },
+      quality: 70,
+    });
+
+    await page.goto("https://practice.automationnest.com/landing1");
+    await page.locator("//a[text()='HTML 5 Form/Validation']").click();
+    await page.locator("#firstname").fill("Udhaya Kumar");
+    await page.locator("#lastname").fill("Kothandaraman");
+    await page.locator("#phone").fill("9884145883");
+    await page.locator("#city").fill("Chennai");
+  } finally {
+    await page.screencast.stop();
+    socket.disconnect();
+  }
 });

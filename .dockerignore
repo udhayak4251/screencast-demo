@@ -1,10 +1,10 @@
 node_modules
+.next
 npm-debug.log
 .git
 .github
 coverage
 playwright-report
 test-results
-tests
 .vscode
 *.md
