@@ -125,6 +125,46 @@ p {
   white-space: pre-wrap;
 }
 
+.playgroundPanel {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  padding: 14px;
+}
+
+.playgroundTitle {
+  margin: 0;
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.2;
+}
+
+.playgroundHint {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.codeEditor {
+  width: 100%;
+  margin-top: 12px;
+  min-height: 220px;
+  resize: vertical;
+  border: 1px solid #c6d0df;
+  border-radius: 10px;
+  padding: 12px;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #0f172a;
+  background: #f9fbff;
+}
+
+.codeEditor:focus {
+  outline: 2px solid #b9d4ff;
+  outline-offset: 0;
+  border-color: #9ec5ff;
+}
+
 .streamHeader {
   display: flex;
   justify-content: space-between;
